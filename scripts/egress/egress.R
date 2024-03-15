@@ -5,7 +5,7 @@ synapser::synLogin()
 # Write the following to Synapse: 1) the final output concepts data, 2) the input data used in this pipeline
 latest_commit <- 
   gh::gh(
-    endpoint = "/repos/:owner/:repo/commits/main", 
+    endpoint = "/repos/:owner/:repo/commits/prod", 
     owner = "Sage-Bionetworks", 
     repo = "recover-pipeline-i2b2"
   )
