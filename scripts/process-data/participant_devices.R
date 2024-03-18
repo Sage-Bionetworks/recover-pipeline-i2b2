@@ -13,18 +13,14 @@ vars <- list(fitbitdevices = c("ParticipantIdentifier",
 
 # Load the desired subset of this dataset in memory
 df <- 
-  sapply(dataset, function(x) {
+  lapply(dataset, function(x) {
     tmp <- vars[[x]]
     arrow::open_dataset(file.path(downloadLocation, glue::glue("dataset_{x}"))) %>% 
       select(all_of(tmp)) %>% 
+      dplyr::rename_with(tolower) %>% 
       collect()
-  })
-
-df <- 
-  lapply(df, function(x) {
-    colnames(x) <- tolower(colnames(x))
-    return(x)
-  })
+  }) %>% 
+  setNames(dataset)
 
 # Get lists of participants that i2b2 summaries are already generated for and 
 # add a variable to indicate device type
@@ -33,14 +29,15 @@ fitbit_participants <- read.csv(file.path(outputConceptsDir, "fitbit_participant
 df$fitbitdevices <- 
   df$fitbitdevices %>% 
   dplyr::filter(participantidentifier %in% fitbit_participants$participantidentifier) %>%
-  dplyr::mutate(type = ifelse(is.na(device) | device == "", NA, "fitbit"))
+  dplyr::mutate(type = ifelse(is.na(device) | device == "", NA, "Fitbit"))
 
 hk_participants <- read.csv(file.path(outputConceptsDir, "hk_participants.csv"))
 
 df$healthkitv2samples <- 
   df$healthkitv2samples %>% 
   dplyr::filter(participantidentifier %in% hk_participants$participantidentifier) %>%
-  mutate(type = case_when(device_manufacturer %in% c("Apple", "Apple Inc.") ~ "Apple",
+  dplyr::filter(device_model != "iPhone") %>% 
+  mutate(type = case_when(device_manufacturer %in% c("Apple", "Apple Inc.") ~ "Apple Watch",
                           device_manufacturer %in% c("Garmin") ~ "Garmin",
                           device_manufacturer %in% c("Polar Electro Oy") ~ "Polar",
                           device_model %in% c("HRM808S") ~ "HRM808S",
@@ -57,6 +54,8 @@ df_joined <-
   summarise(type = toString(sort(unique(type)))) %>% 
   mutate(concept = "mhp:device") %>% 
   rename(value = type) %>% 
+  mutate(value = ifelse({grepl(", Apple Watch|Apple Watch, ", value)}, "Apple Watch", value)) %>% 
+  filter(value != "Other") %>% 
   select(all_of(c("participantidentifier", "concept", "value"))) %>% 
   ungroup()
 
