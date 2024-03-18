@@ -79,7 +79,8 @@ output_concepts <-
   dplyr::filter(nval_num != "<null>" | tval_char != "<null>") %>% 
   mutate(startdate = "<null>", enddate = "<null>") %>% 
   dplyr::select(participantidentifier, startdate, enddate, 
-                concept, valtype_cd, nval_num, tval_char, UNITS_CD)
+                concept, valtype_cd, nval_num, tval_char, UNITS_CD) %>% 
+  dplyr::rename(units_cd = UNITS_CD)
 cat("recoverSummarizeR::process_df() completed.\n")
 
 # Write the output
