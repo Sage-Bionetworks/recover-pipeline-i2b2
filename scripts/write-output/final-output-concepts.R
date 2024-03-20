@@ -44,7 +44,10 @@ valid_participants <-
 
 combined_output_concepts <- 
   combined_output_concepts %>% 
-  filter(participantidentifier %in% valid_participants)
+  filter(participantidentifier %in% valid_participants) %>% 
+  group_by(participantidentifier) %>% 
+  mutate(startdate = ifelse(concept=="mhp:device", min(startdate[concept != "mhp:device"], na.rm = TRUE), startdate)) %>%
+  ungroup()
 
 combined_output_concepts %>% 
   write.csv(file.path(outputConceptsDir, "output_concepts.csv"), row.names = F)
